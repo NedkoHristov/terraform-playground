@@ -18,12 +18,28 @@ module "networking" {
 }
 
 resource "aws_instance" "tf_ec2" {
-  ami                    = var.ami
-  instance_type          = var.instance_type
-  availability_zone      = var.azs[0]
-  vpc_security_group_ids = var.vpc_security_group_ids
-  key_name               = var.key_name
-  subnet_id              = var.subnet_id
+  ami           = var.ami
+  instance_type = var.instance_type
+  # Checkov - Ensure Instance Metadata Service version 1 is not enabled
+  metadata_options {
+    http_endpoint = "enabled"
+    http_tokens   = "required"
+  }
+  # Checkov - Ensure detailed monitoring for EC2 instances is enabled
+  monitoring = true
+  # TODO - attach EBS volume to satisfy checkov's checks
+  # Checkov - Ensure that EC2 is EBS optimized
+  #  ebs_optimized          = true
+  # Checkov - Ensure AWS EC2 instances aren't automatically made public with a public IP
+
+  # Checkov - Ensure Elastic Load Balancers use SSL certificates provided by AWS Certificate Manager
+
+  associate_public_ip_address = true
+  availability_zone           = var.azs[0]
+  vpc_security_group_ids      = var.vpc_security_group_ids
+  key_name                    = var.key_name
+  subnet_id                   = var.subnet_id
+
   tags = {
     Name = "GeneratedByTerraform"
   }
