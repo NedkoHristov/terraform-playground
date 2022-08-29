@@ -21,5 +21,5 @@ variable "availability_zones" {
   description = "AZ in which all the resources will be deployed"
 }
 variable "region" {
-  default = "ap-south-1"
+  default = "eu-west-1"
 }

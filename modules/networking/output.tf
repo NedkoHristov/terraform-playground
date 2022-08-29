@@ -12,10 +12,12 @@ output "private_subnets_id" {
 
 output "default_sg_id" {
   value = aws_security_group.default.id
+  description = "Default SG to alllow traffic from the VPC"
 }
 
 output "security_groups_ids" {
   value = ["${aws_security_group.default.id}"]
+  description = "A list with all SG"
 }
 
 output "public_route_table" {
