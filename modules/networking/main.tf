@@ -43,8 +43,9 @@ resource "aws_subnet" "public_subnet" {
   count                   = length(var.public_subnets_cidr)
   cidr_block              = element(var.public_subnets_cidr, count.index)
   availability_zone       = element(var.availability_zones, count.index)
-  map_public_ip_on_launch = true
 
+# Checkov - Ensure VPC subnets do not assign public IP by default
+  map_public_ip_on_launch = false
   tags = {
     Name        = "${var.environment}-${element(var.availability_zones, count.index)}-public-subnet"
     Environment = "${var.environment}"
@@ -124,6 +125,7 @@ resource "aws_security_group" "default" {
   ]
 
   ingress {
+    cidr_blocks = var.public_subnets_cidr
     from_port = "22"
     to_port   = "22"
     protocol  = "tcp"
@@ -140,3 +142,17 @@ resource "aws_security_group" "default" {
     Environment = "${var.environment}"
   }
 }
+
+# Checkov - Ensure AWS Default Security Group restricts all traffic
+# resource "aws_default_security_group" "default" {
+#   vpc_id                  = aws_vpc.vpc.id
+  # description = "AWS Default Security Group restricts all traffic"
+# }
+
+# resource "aws_flow_log" "vpc_flow_logs" {
+#     iam_role_arn    = "arn"
+#   log_destination = "log"
+#   traffic_type    = "ALL"
+#  vpc_id          = aws_vpc.vpc.id
+#  # checkov:skip=CKV2_AWS_11:Bucket flow-logs are disabled for cost-effectiveness
+#     }

@@ -6,6 +6,24 @@ locals {
   production_availability_zones = ["${var.region}a", "${var.region}b", "${var.region}c"]
 }
 
+# terraform {
+#   backend "s3" {
+#     bucket = "state-20220830"
+#     key    = "state"
+#     # region = "eu-central-1"
+#   }
+# }
+
+# data "terraform_remote_state" "state" {
+#   backend = "s3"
+#   config = {
+#     bucket = "state-20220830"
+#     key    = "state/terraform.tfstate"
+#     region = "eu-central-1"
+#   }
+# }
+
+
 module "networking" {
   source               = "./modules/networking"
   region               = var.region
@@ -25,22 +43,90 @@ resource "aws_instance" "tf_ec2" {
     http_endpoint = "enabled"
     http_tokens   = "required"
   }
+  # Ensure that EC2 is EBS optimized
+  ebs_optimized = true
+
+  # Launch configurations do not have encrypted EBS volumes
+  root_block_device {
+    encrypted = true
+  }
   # Checkov - Ensure detailed monitoring for EC2 instances is enabled
   monitoring = true
-  # TODO - attach EBS volume to satisfy checkov's checks
-  # Checkov - Ensure that EC2 is EBS optimized
-  #  ebs_optimized          = true
+  # Checkov ignore list:
+
   # Checkov - Ensure AWS EC2 instances aren't automatically made public with a public IP
-
-  # Checkov - Ensure Elastic Load Balancers use SSL certificates provided by AWS Certificate Manager
-
   associate_public_ip_address = true
-  availability_zone           = var.azs[0]
-  vpc_security_group_ids      = var.vpc_security_group_ids
-  key_name                    = var.key_name
-  subnet_id                   = var.subnet_id
+
+  availability_zone      = var.azs[0]
+  vpc_security_group_ids = var.vpc_security_group_ids
+  key_name               = var.key_name
+  subnet_id              = var.subnet_id
 
   tags = {
     Name = "GeneratedByTerraform"
   }
 }
+
+# TODO - subscribe topic to to a subscription (https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sns_topic_subscription)
+resource "aws_sns_topic" "user_updates" {
+  name = "user-updates-topic"
+  # Ensure all data stored in the SNS topic is encrypted
+  kms_master_key_id = "alias/aws/sns"
+}
+
+# # RDS
+# # resource "aws_db_instance" "default" {
+# #   allocated_storage = 10
+# #   engine            = "mysql"
+# #   engine_version    = "5.7"
+# #   instance_class    = "db.t3.micro"
+# #   db_name           = "myDatabase"
+# #   username          = "nedko"
+
+# resource "random_password" "password" {
+#   length           = 16
+#   special          = true
+#   override_special = "!#$%&*()-_=+[]{}<>:?"
+# }
+
+# resource "aws_db_instance" "myDB" {
+
+#   allocated_storage    = 10
+#   engine               = "mysql"
+#   engine_version       = "5.7"
+#   instance_class       = "db.t3.micro"
+#   db_name              = "myDatabase"
+#   username             = "nedko"
+#   password             = random_password.password.result
+#   parameter_group_name = "default.mysql5.7"
+
+#   skip_final_snapshot = true
+#   # Ensure RDS database has IAM authentication enabled
+#   iam_database_authentication_enabled = true
+#   # Ensure RDS instances have Multi-AZ enabled
+#   multi_az = true
+#   # Ensure respective logs of Amazon RDS are enabled
+#   enabled_cloudwatch_logs_exports = ["general", "error", "slowquery"]
+#   # Ensure enhanced monitoring for Amazon RDS instances is enabled
+#   monitoring_interval = 5
+#   # Ensure AWS RDS DB cluster encryption is enabled
+#   storage_encrypted = true
+#   # Ensure DB instance gets all minor upgrades automatically
+#   auto_minor_version_upgrade = true
+# }
+
+# resource "aws_db_subnet_group" "myDB" {
+#   # name = "myDB"
+#   # subnet_ids = [aws_subnet.frontend.id, aws_subnet.backend.id]
+#   # subnet_ids = var.subnet_id
+#   # subnet_ids = module.networking.subnet_id
+#   # subnet_ids = module.networking.aws_subnet.public_subnet.*.id
+#   # subnet_ids = module.networking.aws_vpc.vpc.id
+#   # subnet_ids = vpc_private_subnet_id[0]
+#   tags = {
+#     Name = "My DB subnet group"
+#   }
+# }
+# data "aws_subnet_ids" "example" {
+#   vpc_id = var.vpc_id
+# }
