@@ -51,10 +51,9 @@ resource "aws_instance" "tf_ec2" {
   }
   # Checkov - Ensure detailed monitoring for EC2 instances is enabled
   monitoring = true
-  # Checkov ignore list:
 
   # Checkov - Ensure AWS EC2 instances aren't automatically made public with a public IP
-  associate_public_ip_address = true
+  associate_public_ip_address = false
 
   availability_zone      = var.azs[0]
   vpc_security_group_ids = var.vpc_security_group_ids
@@ -106,10 +105,11 @@ resource "aws_db_instance" "myDB" {
   multi_az = true
   # Ensure respective logs of Amazon RDS are enabled
   enabled_cloudwatch_logs_exports = ["general", "error", "slowquery"]
-  # Ensure enhanced monitoring for Amazon RDS instances is enabled
-  # monitoring_interval = 5
   # Ensure AWS RDS DB cluster encryption is enabled
   storage_encrypted = true
   # Ensure DB instance gets all minor upgrades automatically
   auto_minor_version_upgrade = true
+  # Ensure enhanced monitoring for Amazon RDS instances is enabled
+  monitoring_interval = 5
+  monitoring_role_arn = aws_iam_role.monitoring-IAM-Role-RDS.arn
 }
