@@ -143,22 +143,10 @@ resource "aws_security_group" "default" {
   }
 }
 
+# Checkov - Ensure AWS Default Security Group restricts all traffic
 resource "aws_default_security_group" "default" {
   vpc_id = aws_vpc.vpc.id
-  }
-
-# Checkov - Ensure AWS Default Security Group restricts all traffic
-# resource "aws_default_security_group" "default" {
-#   vpc_id                  = aws_vpc.vpc.id
-  # description = "AWS Default Security Group restricts all traffic"
-# }
-
-# resource "aws_flow_log" "example" {
-#   iam_role_arn    = "arn"
-#   log_destination = "log"
-#   traffic_type    = "ALL"
-# + vpc_id          = aws_vpc.ok_vpc.id
-# }
+ }
 
 resource "aws_flow_log" "vpc_flow_log" {
     log_destination      = "arn:aws:s3:::state-20220830"

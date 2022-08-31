@@ -35,6 +35,9 @@ module "networking" {
 }
 
 resource "aws_instance" "tf_ec2" {
+  # Ensure that EC2 is EBS optimized
+  ebs_optimized = true
+
   ami           = var.ami
   instance_type = var.instance_type
   # Checkov - Ensure Instance Metadata Service version 1 is not enabled
@@ -42,8 +45,6 @@ resource "aws_instance" "tf_ec2" {
     http_endpoint = "enabled"
     http_tokens   = "required"
   }
-  # Ensure that EC2 is EBS optimized
-  # ebs_optimized = true
 
   # Launch configurations do not have encrypted EBS volumes
   root_block_device {
@@ -73,43 +74,35 @@ resource "aws_sns_topic" "user_updates" {
 }
 
 # RDS
-# resource "aws_db_instance" "default" {
-#   allocated_storage = 10
-#   engine            = "mysql"
-#   engine_version    = "5.7"
-#   instance_class    = "db.t3.micro"
-#   db_name           = "myDatabase"
-#   username          = "nedko"
+# resource "random_password" "password" {
+#   length           = 16
+#   special          = true
+#   override_special = "!#$%&*()-_=+[]{}<>:?"
+# }
 
-resource "random_password" "password" {
-  length           = 16
-  special          = true
-  override_special = "!#$%&*()-_=+[]{}<>:?"
-}
+# resource "aws_db_instance" "myDB" {
 
-resource "aws_db_instance" "myDB" {
+#   allocated_storage    = 10
+#   engine               = "mysql"
+#   engine_version       = "5.7"
+#   instance_class       = "db.t3.micro"
+#   db_name              = "myDatabase"
+#   username             = "nedko"
+#   password             = random_password.password.result
+#   parameter_group_name = "default.mysql5.7"
 
-  allocated_storage    = 10
-  engine               = "mysql"
-  engine_version       = "5.7"
-  instance_class       = "db.t3.micro"
-  db_name              = "myDatabase"
-  username             = "nedko"
-  password             = random_password.password.result
-  parameter_group_name = "default.mysql5.7"
-
-  skip_final_snapshot = true
-  # Ensure RDS database has IAM authentication enabled
-  iam_database_authentication_enabled = true
-  # Ensure RDS instances have Multi-AZ enabled
-  multi_az = true
-  # Ensure respective logs of Amazon RDS are enabled
-  enabled_cloudwatch_logs_exports = ["general", "error", "slowquery"]
-  # Ensure AWS RDS DB cluster encryption is enabled
-  storage_encrypted = true
-  # Ensure DB instance gets all minor upgrades automatically
-  auto_minor_version_upgrade = true
-  # Ensure enhanced monitoring for Amazon RDS instances is enabled
-  monitoring_interval = 5
-  monitoring_role_arn = aws_iam_role.monitoring-IAM-Role-RDS.arn
-}
+#   skip_final_snapshot = true
+#   # Ensure RDS database has IAM authentication enabled
+#   iam_database_authentication_enabled = true
+#   # Ensure RDS instances have Multi-AZ enabled
+#   multi_az = true
+#   # Ensure respective logs of Amazon RDS are enabled
+#   enabled_cloudwatch_logs_exports = ["general", "error", "slowquery"]
+#   # Ensure AWS RDS DB cluster encryption is enabled
+#   storage_encrypted = true
+#   # Ensure DB instance gets all minor upgrades automatically
+#   auto_minor_version_upgrade = true
+#   # Ensure enhanced monitoring for Amazon RDS instances is enabled
+#   monitoring_interval = 5
+#   monitoring_role_arn = aws_iam_role.monitoring-IAM-Role-RDS.arn
+# }
